@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Runner": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\Temp\\measurements-go.txt"
+    }
+  }
+}
