@@ -2,7 +2,7 @@
   "profiles": {
     "Runner": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Temp\\measurements-go.txt"
+      "commandLineArgs": "C:\\Temp\\measurements-go.txt StreamReaderWithMultipleThreads"
     }
   }
 }

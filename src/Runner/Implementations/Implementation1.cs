@@ -7,10 +7,11 @@ namespace Runner.Implementations;
 
 public class Implementation1 : BaseRunner
 {
-    private const int readChunk = 16 * 1024;
+    private const int readChunk = 4 * 1024;
+    private const int writeChunk = 4 * 1024;
     private static readonly ReadOnlyMemory<char> _separatorChar = new([';']);
     public static string _temporaryFolder = "./temp";
-    public static string _resultFile = "./result.txt";
+    private static readonly string _resultFile = "./result.txt";
 
     public Implementation1()
     {
@@ -67,7 +68,7 @@ public class Implementation1 : BaseRunner
     private Dictionary<string, StationData> ReadInputDataFile(string fileName)
     {
         Dictionary<string, StationData> measurements = new(500);
-        using StreamReader streamReader = new StreamReader(fileName);
+        using StreamReader streamReader = new StreamReader(fileName, null, false);
         char[] buffer = new char[readChunk];
         Span<char> spanBuffer = buffer.AsSpan();
         int unfinishedBufferSize = 0;
@@ -77,7 +78,6 @@ public class Implementation1 : BaseRunner
         int stationIndex = 0;
         int readIterations = 0;
         bool isContinue = true;
-        //Stopwatch sw = Stopwatch.StartNew();
         while (isContinue)
         {
             if (unfinishedBufferSize > 0)
@@ -115,7 +115,7 @@ public class Implementation1 : BaseRunner
 
                 if (!measurements.TryGetValue(stationName, out var stationData))
                 {
-                    stationData = new StationData(new StreamWriter(File.Open(Path.Combine(_temporaryFolder, (++stationIndex).ToString()), FileMode.CreateNew, FileAccess.ReadWrite)));
+                    stationData = new StationData(new StreamWriter(File.Open(Path.Combine(_temporaryFolder, (++stationIndex).ToString()), FileMode.CreateNew, FileAccess.ReadWrite), null, writeChunk));
                     measurements.Add(stationName, stationData);
                 }
 
@@ -130,8 +130,6 @@ public class Implementation1 : BaseRunner
             } while (true);
 
             readIterations++;
-            //Log($"Read file iteration {readIterations} took {sw.Elapsed.TotalMicroseconds:N0} mks");
-            //sw.Restart();
             if (readIterations % 100_000 == 0)
             {
                 Log($"Read {(int)((double)streamReader.BaseStream.Position / streamReader.BaseStream.Length * 100)}% ...");
@@ -187,13 +185,12 @@ public class Implementation1 : BaseRunner
         List<double> measurementsList = new(estimatedMeasurementsSize);
         data.Value.StreamWriter.BaseStream.Position = 0;
         StreamReader reader = new(data.Value.StreamWriter.BaseStream);
-        const int blockSize = 16 * 1024;
+        const int blockSize = 4 * 16 * 1024;
         char[] buffer = ArrayPool<char>.Shared.Rent(blockSize);
         int index = 0;
         char[] unfinishedBuffer = ArrayPool<char>.Shared.Rent(100);
         int unfinishedBufferSize = 0;
         Span<char> spanBuffer = buffer.AsSpan();
-        //Stopwatch sw = Stopwatch.StartNew();
         do
         {
             if (unfinishedBufferSize > 0)
@@ -251,8 +248,6 @@ public class Implementation1 : BaseRunner
         ArrayPool<char>.Shared.Return(unfinishedBuffer);
         ArrayPool<char>.Shared.Return(buffer);
 
-        //Log($"File {fileIndex} processed in {sw.Elapsed.TotalMilliseconds} ms");
-
         return measurementsList;
     }
 
@@ -286,17 +281,18 @@ public class Implementation1 : BaseRunner
     {
         Console.WriteLine(DateTime.Now.ToString("HH:mm:ss:ffff ") + msg);
     }
+
+    private class StationData
+    {
+        public StationData(StreamWriter streamWriter)
+        {
+            StreamWriter = streamWriter;
+        }
+        public StreamWriter StreamWriter { get; set; }
+        public double Average { get; set; }
+        public double Min { get; set; }
+        public double Max { get; set; }
+        public int Length { get; set; }
+    }
 }
 
-public class StationData
-{
-    public StationData(StreamWriter streamWriter)
-    {
-        StreamWriter = streamWriter;
-    }
-    public StreamWriter StreamWriter { get; set; }
-    public double Average { get; set; }
-    public double Min { get; set; }
-    public double Max { get; set; }
-    public int Length { get; set; }
-}

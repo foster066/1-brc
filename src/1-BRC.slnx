@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="Benchmarks/Benchmarks.csproj" Id="a3c2c46f-6220-4856-80e3-e097bd294d74" />
   <Project Path="Runner/Runner.csproj" />
 </Solution>

@@ -12,8 +12,12 @@ if (args.Length > 0)
 }
 if (args.Length > 1)
 {
-    implementation = args[0];
+    implementation = args[1];
 }
+
+PowerManager powerManager = new PowerManager();
+var currentPlan = powerManager.GetCurrentPlan();
+powerManager.SetActive(powerManager.MaximumPerformance);
 
 string implementationName = "Runner.Implementations." + implementation;
 
@@ -31,6 +35,8 @@ else
 {
     Console.WriteLine($"Implementation '{implementationName}' not found");
 }
+
+powerManager.SetActive(currentPlan);
 
 void CleanTempDirectory()
 {
